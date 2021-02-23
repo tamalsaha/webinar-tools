@@ -1,0 +1,43 @@
+{
+  "conferenceId": "81202957709",
+  "conferenceSolution": {
+    "iconUri": "https://lh3.googleusercontent.com/ugWKRyPiOCwjn5jfaoVgC-O80F3nhKH1dKMGsibXvGV1tc6pGXLOJk9WO7dwhw8-Xl9IwkKZEFDbeMDgnx-kf8YGJZ9uhrJMK9KP8-ISybmbgg1LK121obq2o5ML0YugbWh-JevWMu4FxxTKzM2r68bfDG_NY-BNnHSG7NcOKxo-RE7dfObk3VkycbRZk_GUK_1UUI0KitNg7HBfyqFyxIPOmds0l-h2Q1atWtDWLi29n_2-s5uw_kV4l2KeeaSGws_x8h0zsYWLDP5wdKWwYMYiQD2AFM32SHJ4wLAcAKnwoZxUSyT_lWFTP0PHJ6PwETDGNZjmwh3hD6Drn7Z3mnX662S6tkoPD92LtMDA0eNLr6lg-ypI2fhaSGKOeWFwA5eFjds7YcH-axp6cleuiEp05iyPO8uqtRDRMEqQhPaiRTcw7pY5UAVbz2yXbMLVofojrGTOhdvlYvIdDgBOSUkqCshBDV4A2TJyDXxFjpSYaRvwwWIT0JgrIxLpBhnyd3_w6m5My5QtgBJEt_S2Dq4bXwCAA7VcRiD61WmDyHfU3dBiWQUNjcH39IKT9V1fbUcUkfDPM_AGjp7pwgG3w9yDemGi1OGlRXS4pU7UwF24c2dozrmaK17iPaExn0cmIgtBnFUXReY48NI8h2MNd_QysNMWYNYbufoPD7trSu6nS39wlUDQer2V",
+    "key": {
+      "type": "addOn"
+    },
+    "name": "Zoom Meeting"
+  },
+  "entryPoints": [
+    {
+      "entryPointType": "video",
+      "label": "us02web.zoom.us/j/81202957709?pwd=",
+      "meetingCode": "81202957709",
+      "passcode": "912831",
+      "uri": "https://us02web.zoom.us/j/81202957709?pwd="
+    },
+    {
+      "entryPointType": "phone",
+      "label": "+1 301-715-8592",
+      "passcode": "912831",
+      "regionCode": "US",
+      "uri": "tel:+13017158592,,81202957709#"
+    },
+    {
+      "entryPointType": "more",
+      "uri": "https://www.google.com/url?q=https://applications.zoom.us/addon/invitation/detail?meetingUuid%3DHW0IXcyUQdWlzN8Ei33%252BGw%253D%253D%26signature%3D51bcc288487cfc169ae2ce8b2e3a70a55c188714ac85941e34d64994e97e5d3b%26v%3D1\u0026sa=D\u0026source=calendar\u0026usg=AOvVaw3wRnZGnsXeXtsbEUcwVJNV"
+    }
+  ],
+  "parameters": {
+    "addOnParameters": {
+      "parameters": {
+        "meetingCreatedBy": "tamal@appscode.com",
+        "meetingType": "2",
+        "meetingUuid": "HW0IXcyUQdWlzN8Ei33+Gw==",
+        "realMeetingId": "81202957709",
+        "scriptId": "1O_9DeEljSH2vrECr8XeFYYRxFFiowFKOivqSDz316BlBcDXrF00BXrkO"
+      }
+    }
+  },
+  "signature": "AL9oL6Vhc1dA0GIfEspG89RfDra8"
+}
+
