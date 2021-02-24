@@ -8,7 +8,6 @@ import (
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 	"log"
-	"os"
 	"time"
 )
 
@@ -53,7 +52,6 @@ func main() {
 		data, _ := json.MarshalIndent(e2.ConferenceData, "", "  ")
 		fmt.Println(string(data))
 	}
-	os.Exit(1)
 
 	cals, err := srv.CalendarList.List().ShowDeleted(false).Do()
 	if err != nil {
