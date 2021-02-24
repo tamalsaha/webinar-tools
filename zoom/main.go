@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
-
+	"time"
+	passgen "gomodules.xyz/password-generator"
 	"github.com/himalayan-institute/zoom-lib-golang"
 )
 
@@ -24,6 +27,73 @@ func main() {
 	if err != nil {
 		log.Fatalf("got error listing users: %+v\n", err)
 	}
+	data, err := json.MarshalIndent(user, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(data))
+
+	ms, err := zoom.ListMeetings(zoom.ListMeetingsOptions{
+		HostID:     user.ID,
+		Type:       zoom.ListMeetingTypeUpcoming,
+		PageSize:   nil,
+		PageNumber: nil,
+	})
+	if err != nil {
+		panic(err)
+	}
+	for _, m := range ms.Meetings {
+		data, err := json.MarshalIndent(m, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(string(data))
+		fmt.Println("_______________________________*************")
+	}
+
+	start := time.Now().Add(60 *time.Minute)
+
+	meeting, err := zoom.CreateMeeting(zoom.CreateMeetingOptions{
+		HostID:         user.ID,
+		Topic:          "Test Zoom API",
+		Type:           zoom.MeetingTypeScheduled,
+		StartTime:     &zoom.Time{
+			Time:start,
+		},
+		Duration:       25,
+		Timezone:       start.Location().String(),
+		Password:       passgen.GenerateForCharset(10, passgen.AlphaNum),
+		Agenda:         `Solve World Hunger
+and also
+Corona`,
+		TrackingFields: nil,
+		Settings:       zoom.MeetingSettings{
+			HostVideo:                    false,
+			ParticipantVideo:             false,
+			ChinaMeeting:                 false,
+			IndiaMeeting:                 false,
+			JoinBeforeHost:               true,
+			MuteUponEntry:                true,
+			Watermark:                    false,
+			UsePMI:                       false,
+			ApprovalType:                 zoom.ApprovalTypeManuallyApprove,
+			RegistrationType:             zoom.RegistrationTypeRegisterEachTime,
+			Audio:                        zoom.AudioBoth,
+			AutoRecording:                zoom.AutoRecordingLocal,
+			CloseRegistration:            false,
+			WaitingRoom:                  false,
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+	data2, err := json.MarshalIndent(meeting, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(data2))
+
+	os.Exit(1)
 
 	fifty := int(50)
 	webinars, err := zoom.ListWebinars(zoom.ListWebinarsOptions{

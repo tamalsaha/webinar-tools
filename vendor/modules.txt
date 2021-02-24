@@ -61,6 +61,9 @@ golang.org/x/text/unicode/norm
 # gomodules.xyz/gdrive-utils v0.0.0-20210223120558-ff697d120ee1
 ## explicit
 gomodules.xyz/gdrive-utils
+# gomodules.xyz/password-generator v0.2.6
+## explicit
+gomodules.xyz/password-generator
 # google.golang.org/api v0.40.0
 ## explicit
 google.golang.org/api/calendar/v3
