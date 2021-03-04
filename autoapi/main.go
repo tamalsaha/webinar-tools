@@ -116,7 +116,7 @@ type SheetReader struct {
 	columnEnd     string
 	rowStart      int
 
-	idx           int
+	idx    int
 	header bool
 
 	ValueRenderOption    string
@@ -185,7 +185,6 @@ func (r *SheetReader) read(idx int) (record []string, err error) {
 	}
 	return record, nil
 }
-
 
 // ReadAll reads all the remaining records from r.
 // Each record is a slice of fields.
