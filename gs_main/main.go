@@ -35,7 +35,7 @@ func main() {
 	// https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
 	spreadsheetId := "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
 
-	reader := lib.New(srv, spreadsheetId, "Class Data", "A", "F", 1)
+	reader := lib.NewReader(srv, spreadsheetId, "Class Data", "A", "F", 1)
 
 	readRange := "Class Data!A1:F31"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
@@ -63,19 +63,15 @@ func main() {
 	}
 
 
+	writer := lib.NewWriter(srv, spreadsheetId, "Class Data", "A", "F", 1)
 
-	//if _, err := clientsFile.Seek(0, 0); err != nil { // Go to the start of the file
-	//	panic(err)
-	//}
-	//
+
 	//clients = append(clients, &Client{Id: "12", Name: "John", Age: "21"}) // Add clients
 	//clients = append(clients, &Client{Id: "13", Name: "Fred"})
 	//clients = append(clients, &Client{Id: "14", Name: "James", Age: "32"})
 	//clients = append(clients, &Client{Id: "15", Name: "Danny"})
-	//csvContent, err := gocsv.MarshalString(&clients) // Get all clients as CSV string
-	////err = gocsv.MarshalFile(&clients, clientsFile) // Use this to save the CSV back to the file
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println(csvContent) // Display all clients as CSV string
+	err = gocsv.MarshalCSV(nil, writer)
+	if err != nil {
+		panic(err)
+	}
 }

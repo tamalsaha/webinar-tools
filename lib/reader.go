@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"github.com/gocarina/gocsv"
 	"google.golang.org/api/sheets/v4"
 	"io"
 )
@@ -21,7 +22,9 @@ type SheetReader struct {
 	DateTimeRenderOption string
 }
 
-func New(srv *sheets.Service, spreadsheetId, sheetName, columnStart, columnEnd string, rowStart int) *SheetReader {
+var _ gocsv.CSVReader = &SheetReader{}
+
+func NewReader(srv *sheets.Service, spreadsheetId, sheetName, columnStart, columnEnd string, rowStart int) *SheetReader {
 	return &SheetReader{
 		srv:                  srv,
 		spreadsheetId:        spreadsheetId,
