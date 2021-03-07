@@ -7,6 +7,15 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
+type GSRow struct {
+	Name                    string `csv:"Student Name"`
+	Gender                  string `csv:"Gender"`
+	ClassLevel              string `csv:"Class Level"`
+	HomeState               string `csv:"Home State"`
+	Major                   string `csv:"Major"`
+	ExtracurricularActivity string `csv:"Extracurricular Activity"`
+}
+
 type Client struct { // Our example struct, you can use "-" to ignore a field
 	Id      string `csv:"client_id"`
 	Name    string `csv:"client_name"`
