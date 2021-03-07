@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gocarina/gocsv"
 	"google.golang.org/api/sheets/v4"
+	"strings"
 )
 
 type SheetWriter struct {
@@ -51,6 +52,7 @@ func (w *SheetWriter) Flush() {
 		return
 	}
 
+	// read first column
 	readRange := fmt.Sprintf("%s!A:A", w.sheetName)
 	resp, err := w.srv.Spreadsheets.Values.Get(w.spreadsheetId, readRange).
 		ValueRenderOption(w.ValueRenderOption).
@@ -77,6 +79,21 @@ func (w *SheetWriter) Flush() {
 		}
 	} else {
 		// A1:C1
+
+		// read first row == header row
+		readRange := fmt.Sprintf("%s!1:1", w.sheetName)
+		headerResp, err := w.srv.Spreadsheets.Values.Get(w.spreadsheetId, readRange).
+			ValueRenderOption(w.ValueRenderOption).
+			DateTimeRenderOption(w.DateTimeRenderOption).
+			Do()
+		if err != nil {
+			w.e = fmt.Errorf("unable to retrieve data from sheet: %v", err)
+			return
+		}
+
+
+
+
 		type Index struct {
 			Before int
 			After  int
@@ -84,7 +101,7 @@ func (w *SheetWriter) Flush() {
 
 		headerMap := map[string]*Index{}
 		headerLength := 0
-		for i, header := range resp.Values[0] {
+		for i, header := range headerResp.Values[0] {
 			headerMap[header.(string)] = &Index{
 				Before: i,
 				After:  -1,
@@ -116,17 +133,18 @@ func (w *SheetWriter) Flush() {
 		}
 
 		if len(newHeaders) > 0 {
-			start := 'A' + newHeaderStart
+			var sb strings.Builder
+			sb.WriteRune(rune( 'A' + newHeaderStart))
 			headerVals := sheets.ValueRange{
 				MajorDimension: "ROWS",
-				Range:          fmt.Sprintf("%s!%s%d", w.sheetName, start, 1),
+				Range:          fmt.Sprintf("%s!%s%d", w.sheetName, sb.String(), 1),
 				Values: [][]interface{}{
 					newHeaders,
 				},
 			}
 			_, err = w.srv.Spreadsheets.Values.Append(w.spreadsheetId, headerVals.Range, &headerVals).
 				IncludeValuesInResponse(false).
-				InsertDataOption("INSERT_ROWS").
+				InsertDataOption("OVERWRITE").
 				ValueInputOption("USER_ENTERED").
 				Do()
 			if err != nil {
@@ -140,10 +158,11 @@ func (w *SheetWriter) Flush() {
 			Range:          fmt.Sprintf("%s!A%d", w.sheetName, 1+len(resp.Values)),
 			Values:         make([][]interface{}, len(w.data)-1), // skip header
 		}
-		for i := range w.data[1:] {
+		d22 := w.data[1:]
+		for i := range d22 {
 			vals.Values[i] = make([]interface{}, headerLength) // header length
-			for j := range w.data[i] {
-				vals.Values[i][idmap[j]] = w.data[i][j]
+			for j := range d22[i] {
+				vals.Values[i][idmap[j]] = d22[i][j]
 			}
 		}
 	}

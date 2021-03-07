@@ -23,7 +23,8 @@ type Client struct { // Our example struct, you can use "-" to ignore a field
 	Id      string `csv:"client_id"`
 	Name    string `csv:"client_name"`
 	Age     string `csv:"client_age"`
-	NotUsed string `csv:"-"`
+	City    string `csv:"city"`
+	Country string `csv:"country"`
 }
 
 func main() {
@@ -71,9 +72,9 @@ func main() {
 	//}
 
 	clients = []*Client{}
-	clients = append(clients, &Client{Id: "12", Name: "John", Age: "21"}) // Add clients
-	clients = append(clients, &Client{Id: "13", Name: "Fred"})
-	clients = append(clients, &Client{Id: "14", Name: "James", Age: "32"})
+	clients = append(clients, &Client{Id: "12", Name: "John", Age: "21", City: "LV", Country: "US"}) // Add clients
+	clients = append(clients, &Client{Id: "13", Name: "Fred", City: "Dhaka", Country: "BD"})
+	clients = append(clients, &Client{Id: "14", Name: "James", Age: "32", City: "LA", Country: "US"})
 	clients = append(clients, &Client{Id: "15", Name: "Danny"})
 
 	writer := lib.NewWriter(srv, spreadsheetId, "clients2")
