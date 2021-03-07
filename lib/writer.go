@@ -78,8 +78,6 @@ func (w *SheetWriter) Flush() {
 			}
 		}
 	} else {
-		// A1:C1
-
 		// read first row == header row
 		readRange := fmt.Sprintf("%s!1:1", w.sheetName)
 		headerResp, err := w.srv.Spreadsheets.Values.Get(w.spreadsheetId, readRange).
@@ -90,9 +88,6 @@ func (w *SheetWriter) Flush() {
 			w.e = fmt.Errorf("unable to retrieve data from sheet: %v", err)
 			return
 		}
-
-
-
 
 		type Index struct {
 			Before int
@@ -123,7 +118,6 @@ func (w *SheetWriter) Flush() {
 				headerLength++
 			}
 		}
-		// 1:1
 
 		idmap := map[int]int{}
 		for _, index := range headerMap {
@@ -133,6 +127,8 @@ func (w *SheetWriter) Flush() {
 		}
 
 		if len(newHeaders) > 0 {
+			// add new headers
+
 			var sb strings.Builder
 			sb.WriteRune(rune( 'A' + newHeaderStart))
 			headerVals := sheets.ValueRange{
@@ -158,6 +154,7 @@ func (w *SheetWriter) Flush() {
 			Range:          fmt.Sprintf("%s!A%d", w.sheetName, 1+len(resp.Values)),
 			Values:         make([][]interface{}, len(w.data)-1), // skip header
 		}
+		// reorder values as idmap
 		d22 := w.data[1:]
 		for i := range d22 {
 			vals.Values[i] = make([]interface{}, headerLength) // header length
