@@ -14,6 +14,9 @@ type SheetWriter struct {
 	spreadsheetId string
 	sheetName     string
 
+	ValueRenderOption    string
+	DateTimeRenderOption string
+
 	data [][]string
 	e    error
 }
@@ -25,6 +28,8 @@ func NewWriter(srv *sheets.Service, spreadsheetId, sheetName string) *SheetWrite
 		srv:           srv,
 		spreadsheetId: spreadsheetId,
 		sheetName:     sheetName,
+		ValueRenderOption:    "FORMATTED_VALUE",
+		DateTimeRenderOption: "SERIAL_NUMBER",
 	}
 }
 

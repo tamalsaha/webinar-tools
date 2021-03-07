@@ -5,6 +5,7 @@ import (
 	"github.com/gocarina/gocsv"
 	"google.golang.org/api/sheets/v4"
 	"io"
+	"strings"
 )
 
 type SheetReader struct {
@@ -24,13 +25,12 @@ type SheetReader struct {
 
 var _ gocsv.CSVReader = &SheetReader{}
 
-func NewReader(srv *sheets.Service, spreadsheetId, sheetName, columnStart, columnEnd string, rowStart int) *SheetReader {
+func NewReader(srv *sheets.Service, spreadsheetId, sheetName, columnStart string, rowStart int) *SheetReader {
 	return &SheetReader{
 		srv:                  srv,
 		spreadsheetId:        spreadsheetId,
 		sheetName:            sheetName,
 		columnStart:          columnStart,
-		columnEnd:            columnEnd,
 		rowStart:             rowStart,
 		idx:                  rowStart,
 		ValueRenderOption:    "FORMATTED_VALUE",
@@ -65,6 +65,14 @@ func (r *SheetReader) Read() (record []string, err error) {
 }
 
 func (r *SheetReader) read(idx int) (record []string, err error) {
+	if r.columnEnd == "" {
+		columnEnd, err := r.readHeader()
+		if err != nil {
+			return nil, err
+		}
+		r.columnEnd = columnEnd
+	}
+
 	readRange := fmt.Sprintf("%s!%s%d:%s%d", r.sheetName, r.columnStart, idx, r.columnEnd, idx)
 	resp, err := r.srv.Spreadsheets.Values.Get(r.spreadsheetId, readRange).
 		ValueRenderOption(r.ValueRenderOption).
@@ -87,12 +95,37 @@ func (r *SheetReader) read(idx int) (record []string, err error) {
 	return record, nil
 }
 
+func (r *SheetReader) readHeader() (string, error) {
+	readRange := fmt.Sprintf("%s!1:1", r.sheetName)
+	resp, err := r.srv.Spreadsheets.Values.Get(r.spreadsheetId, readRange).
+		ValueRenderOption(r.ValueRenderOption).
+		DateTimeRenderOption(r.DateTimeRenderOption).
+		Do()
+	if err != nil {
+		return "", fmt.Errorf("unable to retrieve data from sheet: %v", err)
+	}
+	if len(resp.Values) == 0 {
+		return "", io.EOF
+	}
+	var sb strings.Builder
+	sb.WriteRune(rune('A' + len(resp.Values[0])))
+	return sb.String(), nil
+}
+
 // ReadAll reads all the remaining records from r.
 // Each record is a slice of fields.
 // A successful call returns err == nil, not err == io.EOF. Because ReadAll is
 // defined to read until EOF, it does not treat end of file as an error to be
 // reported.
 func (r *SheetReader) ReadAll() (records [][]string, err error) {
+	if r.columnEnd == "" {
+		columnEnd, err := r.readHeader()
+		if err != nil {
+			return nil, err
+		}
+		r.columnEnd = columnEnd
+	}
+
 	readRange := fmt.Sprintf("%s!%s%d:%s", r.sheetName, r.columnStart, r.idx, r.columnEnd)
 	resp, err := r.srv.Spreadsheets.Values.Get(r.spreadsheetId, readRange).
 		ValueRenderOption(r.ValueRenderOption).
