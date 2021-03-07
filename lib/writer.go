@@ -130,7 +130,7 @@ func (w *SheetWriter) Flush() {
 			// add new headers
 
 			var sb strings.Builder
-			sb.WriteRune(rune( 'A' + newHeaderStart))
+			sb.WriteRune(rune('A' + newHeaderStart))
 			headerVals := sheets.ValueRange{
 				MajorDimension: "ROWS",
 				Range:          fmt.Sprintf("%s!%s%d", w.sheetName, sb.String(), 1),
