@@ -169,3 +169,4 @@ google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/dgrijalva/jwt-go.v3 v3.2.0
 gopkg.in/dgrijalva/jwt-go.v3
+# github.com/gocarina/gocsv => github.com/gomodules/gocsv v0.0.0-20201208093247-67c824bc04d4
