@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/gocarina/gocsv"
 	"github.com/tamalsaha/webinar-tools/lib"
 	gdrive "gomodules.xyz/gdrive-utils"
@@ -44,7 +45,6 @@ func main() {
 
 	spreadsheetId := "18zl47TxgtdRxnzO-E47lyE_pV5Na1JbCAEVJKQ-PY20"
 
-
 	//readRange := "Class Data!A1:F31"
 	//resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	//if err != nil {
@@ -63,13 +63,13 @@ func main() {
 
 	clients := []*Client{}
 
-	//reader := lib.NewReader(srv, spreadsheetId, "clients", "A", "C", 1)
-	//if err := gocsv.UnmarshalCSV(reader, &clients); err != nil { // Load clients from file
-	//	panic(err)
-	//}
-	//for _, client := range clients {
-	//	fmt.Println("Hello", client.Name)
-	//}
+	reader := lib.NewReader(srv, spreadsheetId, "clients", "A", 1)
+	if err := gocsv.UnmarshalCSV(reader, &clients); err != nil { // Load clients from file
+		panic(err)
+	}
+	for _, client := range clients {
+		fmt.Println("Hello", client.Name)
+	}
 
 	clients = []*Client{}
 	clients = append(clients, &Client{Id: "12", Name: "John", Age: "21", City: "LV", Country: "US"}) // Add clients
