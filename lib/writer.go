@@ -3,24 +3,16 @@ package lib
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/gocarina/gocsv"
 	"google.golang.org/api/sheets/v4"
-	"strings"
 )
 
 type SheetWriter struct {
 	srv           *sheets.Service
 	spreadsheetId string
 	sheetName     string
-	//columnStart   string
-	// columnEnd     string
-	// rowStart      int
-
-	// idx    int
-	header bool
-
-	ValueRenderOption    string
-	DateTimeRenderOption string
 
 	data [][]string
 	e    error
@@ -30,11 +22,9 @@ var _ gocsv.CSVWriter = &SheetWriter{}
 
 func NewWriter(srv *sheets.Service, spreadsheetId, sheetName string) *SheetWriter {
 	return &SheetWriter{
-		srv:                  srv,
-		spreadsheetId:        spreadsheetId,
-		sheetName:            sheetName,
-		ValueRenderOption:    "FORMATTED_VALUE",
-		DateTimeRenderOption: "SERIAL_NUMBER",
+		srv:           srv,
+		spreadsheetId: spreadsheetId,
+		sheetName:     sheetName,
 	}
 }
 
