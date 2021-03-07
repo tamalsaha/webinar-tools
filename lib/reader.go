@@ -25,17 +25,32 @@ type SheetReader struct {
 
 var _ gocsv.CSVReader = &SheetReader{}
 
-func NewReader(srv *sheets.Service, spreadsheetId, sheetName, columnStart string, rowStart int) *SheetReader {
+func NewReader(srv *sheets.Service, spreadsheetId, sheetName string, rowStart int) *SheetReader {
 	return &SheetReader{
 		srv:                  srv,
 		spreadsheetId:        spreadsheetId,
 		sheetName:            sheetName,
-		columnStart:          columnStart,
+		columnStart:          "A",
 		rowStart:             rowStart,
 		idx:                  rowStart,
 		ValueRenderOption:    "FORMATTED_VALUE",
 		DateTimeRenderOption: "SERIAL_NUMBER",
 	}
+}
+
+func NewLastRowReader(srv *sheets.Service, spreadsheetId, sheetName string) (*SheetReader, error) {
+	readRange := fmt.Sprintf("%s!A:A", sheetName)
+	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).
+		ValueRenderOption("FORMATTED_VALUE").
+		DateTimeRenderOption("SERIAL_NUMBER").
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve data from sheet: %v", err)
+	}
+	if len(resp.Values) == 0 {
+		return nil, io.EOF
+	}
+	return NewReader(srv, spreadsheetId, sheetName, len(resp.Values)), nil
 }
 
 // Read reads one record (a slice of fields) from r.

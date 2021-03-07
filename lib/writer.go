@@ -25,9 +25,9 @@ var _ gocsv.CSVWriter = &SheetWriter{}
 
 func NewWriter(srv *sheets.Service, spreadsheetId, sheetName string) *SheetWriter {
 	return &SheetWriter{
-		srv:           srv,
-		spreadsheetId: spreadsheetId,
-		sheetName:     sheetName,
+		srv:                  srv,
+		spreadsheetId:        spreadsheetId,
+		sheetName:            sheetName,
 		ValueRenderOption:    "FORMATTED_VALUE",
 		DateTimeRenderOption: "SERIAL_NUMBER",
 	}
