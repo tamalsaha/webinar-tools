@@ -2,10 +2,11 @@ package lib
 
 import (
 	"fmt"
-	"github.com/gocarina/gocsv"
-	"google.golang.org/api/sheets/v4"
 	"io"
 	"strings"
+
+	"github.com/gocarina/gocsv"
+	"google.golang.org/api/sheets/v4"
 )
 
 type SheetReader struct {
@@ -25,8 +26,8 @@ type SheetReader struct {
 
 var _ gocsv.CSVReader = &SheetReader{}
 
-func NewReader(srv *sheets.Service, spreadsheetId, sheetName string, rowStart int) *SheetReader {
-	return &SheetReader{
+func NewReader(srv *sheets.Service, spreadsheetId, sheetName string, rowStart int) (*SheetReader, error) {
+	r := &SheetReader{
 		srv:                  srv,
 		spreadsheetId:        spreadsheetId,
 		sheetName:            sheetName,
@@ -36,6 +37,15 @@ func NewReader(srv *sheets.Service, spreadsheetId, sheetName string, rowStart in
 		ValueRenderOption:    "FORMATTED_VALUE",
 		DateTimeRenderOption: "SERIAL_NUMBER",
 	}
+
+	values, err := r.readHeader()
+	if err != nil {
+		return nil, err
+	}
+	var sb strings.Builder
+	sb.WriteRune(rune('A' + len(values[0])))
+	r.columnEnd = sb.String()
+	return r, nil
 }
 
 func NewLastRowReader(srv *sheets.Service, spreadsheetId, sheetName string) (*SheetReader, error) {
@@ -50,7 +60,59 @@ func NewLastRowReader(srv *sheets.Service, spreadsheetId, sheetName string) (*Sh
 	if len(resp.Values) == 0 {
 		return nil, io.EOF
 	}
-	return NewReader(srv, spreadsheetId, sheetName, len(resp.Values)), nil
+	return NewReader(srv, spreadsheetId, sheetName, len(resp.Values))
+}
+
+func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string, filterBy func(v interface{}) (bool, error)) (*SheetReader, error) {
+	r := &SheetReader{
+		srv:                  srv,
+		spreadsheetId:        spreadsheetId,
+		sheetName:            sheetName,
+		columnStart:          "A",
+		ValueRenderOption:    "FORMATTED_VALUE",
+		DateTimeRenderOption: "SERIAL_NUMBER",
+	}
+
+	values, err := r.readHeader()
+	if err != nil {
+		return nil, err
+	}
+	var sb strings.Builder
+	sb.WriteRune(rune('A' + len(values[0])))
+	r.columnEnd = sb.String()
+
+	sb.Reset()
+	for i, v := range values[0] {
+		if v.(string) == header {
+			sb.WriteRune(rune('A' + i))
+			break
+		}
+	}
+	if sb.Len() == 0 {
+		return nil, fmt.Errorf("missing header %s", header)
+	}
+
+	readRange := fmt.Sprintf("%s!%s:%s", sheetName, sb.String(), sb.String())
+	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).
+		ValueRenderOption("FORMATTED_VALUE").
+		DateTimeRenderOption("SERIAL_NUMBER").
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve data from sheet: %v", err)
+	}
+	if len(resp.Values) == 0 {
+		return nil, io.EOF
+	}
+	for i := range resp.Values {
+		if ok, err := filterBy(resp.Values[i][0]); err != nil {
+			return nil, err
+		} else if ok {
+			r.rowStart = i + 1
+			r.idx = i + 1
+			break
+		}
+	}
+	return r, nil
 }
 
 // Read reads one record (a slice of fields) from r.
@@ -80,14 +142,6 @@ func (r *SheetReader) Read() (record []string, err error) {
 }
 
 func (r *SheetReader) read(idx int) (record []string, err error) {
-	if r.columnEnd == "" {
-		columnEnd, err := r.readHeader()
-		if err != nil {
-			return nil, err
-		}
-		r.columnEnd = columnEnd
-	}
-
 	readRange := fmt.Sprintf("%s!%s%d:%s%d", r.sheetName, r.columnStart, idx, r.columnEnd, idx)
 	resp, err := r.srv.Spreadsheets.Values.Get(r.spreadsheetId, readRange).
 		ValueRenderOption(r.ValueRenderOption).
@@ -110,21 +164,19 @@ func (r *SheetReader) read(idx int) (record []string, err error) {
 	return record, nil
 }
 
-func (r *SheetReader) readHeader() (string, error) {
+func (r *SheetReader) readHeader() ([][]interface{}, error) {
 	readRange := fmt.Sprintf("%s!1:1", r.sheetName)
 	resp, err := r.srv.Spreadsheets.Values.Get(r.spreadsheetId, readRange).
 		ValueRenderOption(r.ValueRenderOption).
 		DateTimeRenderOption(r.DateTimeRenderOption).
 		Do()
 	if err != nil {
-		return "", fmt.Errorf("unable to retrieve data from sheet: %v", err)
+		return nil, fmt.Errorf("unable to retrieve data from sheet: %v", err)
 	}
 	if len(resp.Values) == 0 {
-		return "", io.EOF
+		return nil, io.EOF
 	}
-	var sb strings.Builder
-	sb.WriteRune(rune('A' + len(resp.Values[0])))
-	return sb.String(), nil
+	return resp.Values, nil
 }
 
 // ReadAll reads all the remaining records from r.
@@ -133,14 +185,6 @@ func (r *SheetReader) readHeader() (string, error) {
 // defined to read until EOF, it does not treat end of file as an error to be
 // reported.
 func (r *SheetReader) ReadAll() (records [][]string, err error) {
-	if r.columnEnd == "" {
-		columnEnd, err := r.readHeader()
-		if err != nil {
-			return nil, err
-		}
-		r.columnEnd = columnEnd
-	}
-
 	readRange := fmt.Sprintf("%s!%s%d:%s", r.sheetName, r.columnStart, r.idx, r.columnEnd)
 	resp, err := r.srv.Spreadsheets.Values.Get(r.spreadsheetId, readRange).
 		ValueRenderOption(r.ValueRenderOption).

@@ -63,7 +63,10 @@ func main() {
 
 	clients := []*Client{}
 
-	reader := lib.NewReader(srv, spreadsheetId, "clients", 1)
+	reader, err := lib.NewReader(srv, spreadsheetId, "clients", 1)
+	if err != nil {
+		panic(err)
+	}
 	if err := gocsv.UnmarshalCSV(reader, &clients); err != nil { // Load clients from file
 		panic(err)
 	}
