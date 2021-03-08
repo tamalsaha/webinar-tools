@@ -3,16 +3,18 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"log"
+	"sort"
+	"time"
+
+	"github.com/go-macaron/binding"
 	"github.com/gocarina/gocsv"
 	"github.com/tamalsaha/webinar-tools/lib"
 	gdrive "gomodules.xyz/gdrive-utils"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 	"gopkg.in/macaron.v1"
-	"io"
-	"log"
-	"sort"
-	"time"
 )
 
 type WebinarSchedule struct {
@@ -24,7 +26,7 @@ type WebinarSchedule struct {
 	SpeakerPicture string   `json:"speaker_picture" csv:"Speaker Picture" form:"speaker_picture"`
 }
 
-type WebinarSignup struct {
+type WebinarRegistrationForm struct {
 	FirstName       string `json:"first_name" csv:"First Name" form:"first_name"`
 	LastName        string `json:"last_name" csv:"Last Name" form:"last_name"`
 	Phone           string `json:"phone" csv:"Phone" form:"phone"`
@@ -115,5 +117,18 @@ func main() {
 		}
 		return string(data)
 	})
+
+	m.Post("/register", binding.Bind(WebinarRegistrationForm{}), func(form WebinarRegistrationForm) string {
+		clients := []*WebinarRegistrationForm{
+			&form,
+		}
+		writer := lib.NewWriter(srv, spreadsheetId, "webinar_2020_03_11")
+		err = gocsv.MarshalCSV(clients, writer)
+		if err != nil {
+			panic(err)
+		}
+		return "registration successful"
+	})
+
 	m.Run()
 }
