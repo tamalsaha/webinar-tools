@@ -111,7 +111,11 @@ func main() {
 			panic(err)
 		}
 
-		data, err := json.MarshalIndent(clients, "", " ")
+		var result *WebinarSchedule
+		if len(clients) > 0 {
+			result = clients[0]
+		}
+		data, err := json.MarshalIndent(result, "", " ")
 		if err != nil {
 			panic(err)
 		}
