@@ -1,5 +1,7 @@
 # cloud.google.com/go v0.74.0
 cloud.google.com/go/compute/metadata
+# github.com/go-macaron/inject v0.0.0-20160627170012-d8a0b8677191
+github.com/go-macaron/inject
 # github.com/gocarina/gocsv v0.0.0-00010101000000-000000000000 => github.com/gomodules/gocsv v0.0.0-20201208093247-67c824bc04d4
 ## explicit
 github.com/gocarina/gocsv
@@ -18,6 +20,8 @@ github.com/googleapis/gax-go/v2
 # github.com/himalayan-institute/zoom-lib-golang v1.0.0
 ## explicit
 github.com/himalayan-institute/zoom-lib-golang
+# github.com/unknwon/com v0.0.0-20190804042917-757f69c95f3e
+github.com/unknwon/com
 # go.opencensus.io v0.22.5
 go.opencensus.io
 go.opencensus.io/internal
@@ -35,6 +39,8 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
+# golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+golang.org/x/crypto/pbkdf2
 # golang.org/x/net v0.0.0-20210222171744-9060382bd457
 ## explicit
 golang.org/x/net/context
@@ -172,4 +178,9 @@ google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/dgrijalva/jwt-go.v3 v3.2.0
 gopkg.in/dgrijalva/jwt-go.v3
+# gopkg.in/ini.v1 v1.46.0
+gopkg.in/ini.v1
+# gopkg.in/macaron.v1 v1.4.0
+## explicit
+gopkg.in/macaron.v1
 # github.com/gocarina/gocsv => github.com/gomodules/gocsv v0.0.0-20201208093247-67c824bc04d4

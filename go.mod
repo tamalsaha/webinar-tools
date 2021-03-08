@@ -10,6 +10,7 @@ require (
 	gomodules.xyz/gdrive-utils v0.0.0-20210223120558-ff697d120ee1
 	gomodules.xyz/password-generator v0.2.6
 	google.golang.org/api v0.40.0
+	gopkg.in/macaron.v1 v1.4.0
 )
 
 replace github.com/gocarina/gocsv => github.com/gomodules/gocsv v0.0.0-20201208093247-67c824bc04d4
