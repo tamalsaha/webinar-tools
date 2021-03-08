@@ -34,6 +34,7 @@ type WebinarRegistrationForm struct {
 	WorkEmail       string `json:"work_email" csv:"Work Email" form:"work_email"`
 	KnowsKubernetes bool   `json:"knows_kubernetes" csv:"Knows Kubernetes" form:"knows_kubernetes"`
 }
+
 type DateTime struct {
 	time.Time
 }
