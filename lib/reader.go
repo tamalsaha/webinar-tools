@@ -69,6 +69,8 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 		spreadsheetId:        spreadsheetId,
 		sheetName:            sheetName,
 		columnStart:          "A",
+		rowStart:             -1,
+		idx:                  -1,
 		ValueRenderOption:    "FORMATTED_VALUE",
 		DateTimeRenderOption: "SERIAL_NUMBER",
 	}
@@ -92,6 +94,7 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 		return nil, fmt.Errorf("missing header %s", header)
 	}
 
+	// read column
 	readRange := fmt.Sprintf("%s!%s:%s", sheetName, sb.String(), sb.String())
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).
 		ValueRenderOption("FORMATTED_VALUE").
@@ -103,6 +106,7 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 	if len(resp.Values) == 0 {
 		return nil, io.EOF
 	}
+
 	for i := range resp.Values {
 		if ok, err := filterBy(resp.Values[i][0]); err != nil {
 			return nil, err
@@ -111,6 +115,9 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 			r.idx = i + 1
 			break
 		}
+	}
+	if r.idx == -1 {
+		return nil, io.EOF
 	}
 	return r, nil
 }
@@ -165,6 +172,7 @@ func (r *SheetReader) read(idx int) (record []string, err error) {
 }
 
 func (r *SheetReader) readHeader() ([][]interface{}, error) {
+	// read first row
 	readRange := fmt.Sprintf("%s!1:1", r.sheetName)
 	resp, err := r.srv.Spreadsheets.Values.Get(r.spreadsheetId, readRange).
 		ValueRenderOption(r.ValueRenderOption).
