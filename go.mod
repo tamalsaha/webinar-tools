@@ -10,6 +10,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
 	gomodules.xyz/gdrive-utils v0.0.0-20210223120558-ff697d120ee1
 	gomodules.xyz/password-generator v0.2.6
+	gomodules.xyz/sets v0.0.0-20210218105342-2efe2fb519a2
 	google.golang.org/api v0.40.0
 	gopkg.in/macaron.v1 v1.4.0
 )

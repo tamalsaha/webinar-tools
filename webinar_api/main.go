@@ -12,6 +12,7 @@ import (
 	"github.com/gocarina/gocsv"
 	"github.com/tamalsaha/webinar-tools/lib"
 	gdrive "gomodules.xyz/gdrive-utils"
+	"gomodules.xyz/sets"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 	"gopkg.in/macaron.v1"
@@ -33,6 +34,10 @@ type WebinarRegistrationForm struct {
 	JobTitle        string `json:"job_title" csv:"Job Title" form:"job_title"`
 	WorkEmail       string `json:"work_email" csv:"Work Email" form:"work_email"`
 	KnowsKubernetes bool   `json:"knows_kubernetes" csv:"Knows Kubernetes" form:"knows_kubernetes"`
+}
+
+type WebinarRegistrationEmail struct {
+	WorkEmail string `json:"work_email" csv:"Work Email" form:"work_email"`
 }
 
 type DateTime struct {
@@ -133,6 +138,30 @@ func main() {
 			panic(err)
 		}
 		return "registration successful"
+	})
+
+	m.Get("/emails", func() string {
+		reader, err := lib.NewColumnReader(srv, spreadsheetId, "webinar_2020_03_11", "Work Email")
+		if err == io.EOF {
+			return "not found"
+		} else if err != nil {
+			panic(err)
+		}
+
+		clients := []*WebinarRegistrationEmail{}
+		if err := gocsv.UnmarshalCSV(reader, &clients); err != nil { // Load clients from file
+			panic(err)
+		}
+
+		result := sets.NewString()
+		for _, v := range clients {
+			result.Insert(v.WorkEmail)
+		}
+		data, err := json.MarshalIndent(result.List(), "", " ")
+		if err != nil {
+			panic(err)
+		}
+		return string(data)
 	})
 
 	m.Run()

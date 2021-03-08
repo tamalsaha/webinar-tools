@@ -76,6 +76,9 @@ gomodules.xyz/gdrive-utils
 # gomodules.xyz/password-generator v0.2.6
 ## explicit
 gomodules.xyz/password-generator
+# gomodules.xyz/sets v0.0.0-20210218105342-2efe2fb519a2
+## explicit
+gomodules.xyz/sets
 # google.golang.org/api v0.40.0
 ## explicit
 google.golang.org/api/calendar/v3
