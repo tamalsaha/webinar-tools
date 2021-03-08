@@ -63,7 +63,7 @@ func NewLastRowReader(srv *sheets.Service, spreadsheetId, sheetName string) (*Sh
 	return NewReader(srv, spreadsheetId, sheetName, len(resp.Values))
 }
 
-func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string, filterBy func(v interface{}) (bool, error)) (*SheetReader, error) {
+func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string, filterBy func(v []interface{}) (int, error)) (*SheetReader, error) {
 	r := &SheetReader{
 		srv:                  srv,
 		spreadsheetId:        spreadsheetId,
@@ -107,18 +107,16 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 		return nil, io.EOF
 	}
 
-	for i := range resp.Values {
-		if ok, err := filterBy(resp.Values[i][0]); err != nil {
-			return nil, err
-		} else if ok {
-			r.rowStart = i + 1
-			r.idx = i + 1
-			break
-		}
+	idx, err := filterBy(resp.Values[0])
+	if err != nil {
+		return nil, err
 	}
-	if r.idx == -1 {
+	if idx == -1 {
 		return nil, io.EOF
 	}
+
+	r.rowStart = idx + 1
+	r.idx = idx + 1
 	return r, nil
 }
 
