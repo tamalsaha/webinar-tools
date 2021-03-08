@@ -3,6 +3,7 @@ module github.com/tamalsaha/webinar-tools
 go 1.16
 
 require (
+	github.com/fatih/structs v1.1.0
 	github.com/go-macaron/binding v1.1.1
 	github.com/gocarina/gocsv v0.0.0-00010101000000-000000000000
 	github.com/himalayan-institute/zoom-lib-golang v1.0.0

@@ -7,7 +7,7 @@ import (
 	"log"
 	"sort"
 	"time"
-
+"github.com/fatih/structs"
 	"github.com/go-macaron/binding"
 	"github.com/gocarina/gocsv"
 	"github.com/tamalsaha/webinar-tools/lib"
@@ -78,7 +78,8 @@ func main() {
 	// m.Use(macaron.Static("public"))
 
 	m.Get("/", func() string {
-		reader, err := lib.NewRowReader(srv, spreadsheetId, "webinar_schedule", "Schedule", func(column []interface{}) (int, error) {
+		header := structs.New(WebinarSchedule{}).Field("Schedule").Tag("csv")
+		reader, err := lib.NewRowReader(srv, spreadsheetId, "Schedule", header, func(column []interface{}) (int, error) {
 			type TP struct {
 				Schedule time.Time
 				Pos      int
@@ -141,7 +142,8 @@ func main() {
 	})
 
 	m.Get("/emails", func() string {
-		reader, err := lib.NewColumnReader(srv, spreadsheetId, "webinar_2020_03_11", "Work Email")
+		header := structs.New(WebinarRegistrationEmail{}).Field("WorkEmail").Tag("csv")
+		reader, err := lib.NewColumnReader(srv, spreadsheetId, "webinar_2020_03_11", header)
 		if err == io.EOF {
 			return "not found"
 		} else if err != nil {

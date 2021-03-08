@@ -1,5 +1,8 @@
 # cloud.google.com/go v0.74.0
 cloud.google.com/go/compute/metadata
+# github.com/fatih/structs v1.1.0
+## explicit
+github.com/fatih/structs
 # github.com/go-macaron/binding v1.1.1
 ## explicit
 github.com/go-macaron/binding
