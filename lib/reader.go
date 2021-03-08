@@ -221,12 +221,12 @@ func (r *SheetReader) ReadAll() (records [][]string, err error) {
 		}
 	}
 
-	r.idx += len(resp.Values)
 	for i, row := range resp.Values {
-		records[i] = make([]string, len(row))
+		records[i+offset] = make([]string, len(row))
 		for j := range row {
 			records[i+offset][j] = fmt.Sprintf("%v", row[j])
 		}
 	}
+	r.idx += len(resp.Values)
 	return records, nil
 }
