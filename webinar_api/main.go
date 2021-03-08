@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"net/http"
 	"sort"
 	"time"
-"github.com/fatih/structs"
+
+	"github.com/fatih/structs"
 	"github.com/go-macaron/binding"
 	"github.com/gocarina/gocsv"
 	"github.com/tamalsaha/webinar-tools/lib"
@@ -129,7 +131,7 @@ func main() {
 		return string(data)
 	})
 
-	m.Post("/register", binding.Bind(WebinarRegistrationForm{}), func(form WebinarRegistrationForm) string {
+	m.Post("/register", binding.Bind(WebinarRegistrationForm{}), func(ctx *macaron.Context, form WebinarRegistrationForm) string {
 		clients := []*WebinarRegistrationForm{
 			&form,
 		}
@@ -138,6 +140,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		ctx.Redirect("/", http.StatusSeeOther)
 		return "registration successful"
 	})
 
