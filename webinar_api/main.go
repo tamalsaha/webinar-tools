@@ -73,7 +73,7 @@ func main() {
 	// m.Use(macaron.Static("public"))
 
 	m.Get("/", func() string {
-		reader, err := lib.NewReaderWhere(srv, spreadsheetId, "webinar_schedule", "Schedule", func(column []interface{}) (int, error) {
+		reader, err := lib.NewRowReader(srv, spreadsheetId, "webinar_schedule", "Schedule", func(column []interface{}) (int, error) {
 			type TP struct {
 				Schedule time.Time
 				Pos      int

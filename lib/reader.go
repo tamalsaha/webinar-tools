@@ -63,7 +63,45 @@ func NewLastRowReader(srv *sheets.Service, spreadsheetId, sheetName string) (*Sh
 	return NewReader(srv, spreadsheetId, sheetName, len(resp.Values))
 }
 
-func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string, filterBy func(v []interface{}) (int, error)) (*SheetReader, error) {
+func NewColumnReader(srv *sheets.Service, spreadsheetId, sheetName, header string) (*SheetReader, error) {
+	r := &SheetReader{
+		srv:                  srv,
+		spreadsheetId:        spreadsheetId,
+		sheetName:            sheetName,
+		columnStart:          "A",
+		rowStart:             -1,
+		idx:                  -1,
+		ValueRenderOption:    "FORMATTED_VALUE",
+		DateTimeRenderOption: "SERIAL_NUMBER",
+	}
+
+	values, err := r.readHeader()
+	if err != nil {
+		return nil, err
+	}
+	var sb strings.Builder
+	sb.WriteRune(rune('A' + len(values[0]) - 1))
+	r.columnEnd = sb.String()
+
+	sb.Reset()
+	for i, v := range values[0] {
+		if v.(string) == header {
+			sb.WriteRune(rune('A' + i))
+			break
+		}
+	}
+	if sb.Len() == 0 {
+		return nil, fmt.Errorf("missing header %s", header)
+	}
+
+	r.columnStart = sb.String()
+	r.columnEnd = sb.String()
+	r.rowStart = 1
+	r.idx = 1
+	return r, nil
+}
+
+func NewRowReader(srv *sheets.Service, spreadsheetId, sheetName, header string, filterBy func(v []interface{}) (int, error)) (*SheetReader, error) {
 	r := &SheetReader{
 		srv:                  srv,
 		spreadsheetId:        spreadsheetId,
