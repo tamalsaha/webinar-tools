@@ -43,7 +43,7 @@ func NewReader(srv *sheets.Service, spreadsheetId, sheetName string, rowStart in
 		return nil, err
 	}
 	var sb strings.Builder
-	sb.WriteRune(rune('A' + len(values[0])))
+	sb.WriteRune(rune('A'+len(values[0])) - 1)
 	r.columnEnd = sb.String()
 	return r, nil
 }
@@ -80,7 +80,7 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 		return nil, err
 	}
 	var sb strings.Builder
-	sb.WriteRune(rune('A' + len(values[0])))
+	sb.WriteRune(rune('A' + len(values[0]) - 1))
 	r.columnEnd = sb.String()
 
 	sb.Reset()
@@ -95,8 +95,9 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 	}
 
 	// read column
-	readRange := fmt.Sprintf("%s!%s:%s", sheetName, sb.String(), sb.String())
+	readRange := fmt.Sprintf("%s!%s2:%s", sheetName, sb.String(), sb.String())
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).
+		MajorDimension("COLUMNS").
 		ValueRenderOption("FORMATTED_VALUE").
 		DateTimeRenderOption("SERIAL_NUMBER").
 		Do()
@@ -104,6 +105,7 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 		return nil, fmt.Errorf("unable to retrieve data from sheet: %v", err)
 	}
 	if len(resp.Values) == 0 {
+		// column only has header row
 		return nil, io.EOF
 	}
 
@@ -115,8 +117,8 @@ func NewReaderWhere(srv *sheets.Service, spreadsheetId, sheetName, header string
 		return nil, io.EOF
 	}
 
-	r.rowStart = idx + 1
-	r.idx = idx + 1
+	r.rowStart = idx + 2 // starts from 1, also includes header row
+	r.idx = idx + 2
 	return r, nil
 }
 

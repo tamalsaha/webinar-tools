@@ -50,6 +50,7 @@ func (w *SheetWriter) Flush() {
 	// read first column
 	readRange := fmt.Sprintf("%s!A:A", w.sheetName)
 	resp, err := w.srv.Spreadsheets.Values.Get(w.spreadsheetId, readRange).
+		MajorDimension("COLUMNS").
 		ValueRenderOption(w.ValueRenderOption).
 		DateTimeRenderOption(w.DateTimeRenderOption).
 		Do()
@@ -60,7 +61,7 @@ func (w *SheetWriter) Flush() {
 
 	var vals sheets.ValueRange
 
-	if len(resp.Values) == 0 {
+	if len(resp.Values) == 0 || len(resp.Values[0]) == 0 {
 		vals = sheets.ValueRange{
 			MajorDimension: "ROWS",
 			Range:          fmt.Sprintf("%s!A%d", w.sheetName, 1),
@@ -146,7 +147,7 @@ func (w *SheetWriter) Flush() {
 
 		vals = sheets.ValueRange{
 			MajorDimension: "ROWS",
-			Range:          fmt.Sprintf("%s!A%d", w.sheetName, 1+len(resp.Values)),
+			Range:          fmt.Sprintf("%s!A%d", w.sheetName, 1+len(resp.Values[0])),
 			Values:         make([][]interface{}, len(w.data)-1), // skip header
 		}
 		// reorder values as idmap
@@ -161,7 +162,7 @@ func (w *SheetWriter) Flush() {
 
 	_, err = w.srv.Spreadsheets.Values.Append(w.spreadsheetId, vals.Range, &vals).
 		IncludeValuesInResponse(false).
-		InsertDataOption("INSERT_ROWS").
+		InsertDataOption("OVERWRITE"). // INSERT_ROWS
 		ValueInputOption("USER_ENTERED").
 		Do()
 	if err != nil {

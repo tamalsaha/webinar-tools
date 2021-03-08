@@ -79,9 +79,12 @@ func main() {
 			})
 			return upcoming[0].Pos, nil
 		})
-		if err != nil {
+		if err == io.EOF {
+			return "not found"
+		} else if err != nil {
 			panic(err)
 		}
+
 		clients := []*WebinarSchedule{}
 		if err := gocsv.UnmarshalCSV(reader, &clients); err != nil { // Load clients from file
 			panic(err)
