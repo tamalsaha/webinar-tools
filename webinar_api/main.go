@@ -81,34 +81,36 @@ func main() {
 
 	m.Get("/", func() string {
 		header := structs.New(WebinarSchedule{}).Field("Schedule").Tag("csv")
-		reader, err := lib.NewRowReader(srv, spreadsheetId, "Schedule", header, func(column []interface{}) (int, error) {
-			type TP struct {
-				Schedule time.Time
-				Pos      int
-			}
-			var upcoming []TP
-			now := time.Now()
-			for i, v := range column {
-				// 3/11/2021 3:00:00
-				t, err := time.Parse("1/2/2006 15:04:05", v.(string))
-				if err != nil {
-					panic(err)
+		reader, err := lib.NewRowReader(srv, spreadsheetId, "Schedule", lib.Filter{
+			Header: header,
+			By: func(column []interface{}) (int, error) {
+				type TP struct {
+					Schedule time.Time
+					Pos      int
 				}
-				if t.After(now) {
-					upcoming = append(upcoming, TP{
-						Schedule: t,
-						Pos:      i,
-					})
+				var upcoming []TP
+				now := time.Now()
+				for i, v := range column {
+					// 3/11/2021 3:00:00
+					t, err := time.Parse("1/2/2006 15:04:05", v.(string))
+					if err != nil {
+						panic(err)
+					}
+					if t.After(now) {
+						upcoming = append(upcoming, TP{
+							Schedule: t,
+							Pos:      i,
+						})
+					}
 				}
-			}
-			if len(upcoming) == 0 {
-				return -1, io.EOF
-			}
-			sort.Slice(upcoming, func(i, j int) bool {
-				return upcoming[i].Schedule.Before(upcoming[j].Schedule)
-			})
-			return upcoming[0].Pos, nil
-		})
+				if len(upcoming) == 0 {
+					return -1, io.EOF
+				}
+				sort.Slice(upcoming, func(i, j int) bool {
+					return upcoming[i].Schedule.Before(upcoming[j].Schedule)
+				})
+				return upcoming[0].Pos, nil
+			}})
 		if err == io.EOF {
 			return "not found"
 		} else if err != nil {
