@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/himalayan-institute/zoom-lib-golang"
-	"google.golang.org/api/calendar/v3"
 	"io"
 	"log"
 	"os"
 	"sort"
 	"time"
+
+	"github.com/himalayan-institute/zoom-lib-golang"
+	"google.golang.org/api/calendar/v3"
 
 	"github.com/fatih/structs"
 	"github.com/go-macaron/binding"
@@ -35,6 +36,11 @@ type WebinarMeetingID struct {
 	GoogleCalendarEventID string `json:"google_calendar_event_id" csv:"Google Calendar Event ID"`
 	ZoomMeetingID         int    `json:"zoom_meeting_id" csv:"Zoom Meeting ID"`
 	ZoomMeetingPassword   string `json:"zoom_meeting_password" csv:"Zoom Meeting Password"`
+}
+
+type WebinarInfo struct {
+	WebinarSchedule
+	WebinarMeetingID
 }
 
 type WebinarRegistrationForm struct {
@@ -198,12 +204,12 @@ func main() {
 			panic(err)
 		}
 
-		meetings := []*WebinarMeetingID{}
+		meetings := []*WebinarInfo{}
 		if err := gocsv.UnmarshalCSV(reader, &meetings); err != nil { // Load clients from file
 			panic(err)
 		}
 
-		var result *WebinarMeetingID
+		var result *WebinarInfo
 		if len(meetings) > 0 {
 			result = meetings[0]
 		}
@@ -246,18 +252,17 @@ func main() {
 			},
 		})
 
-		var schedule *WebinarSchedule
-		meetinginfo, err := CreateZoomMeeting(srvCalendar, zc, zoomAccountEmail, schedule, 60*time.Minute, []string{
+		meetinginfo, err := CreateZoomMeeting(srvCalendar, zc, zoomAccountEmail, &result.WebinarSchedule, 60*time.Minute, []string{
 			form.WorkEmail,
 		})
 		if err != nil {
 			panic(err)
 		}
 
-		meetings = []*WebinarMeetingID{
+		meetings2 := []*WebinarMeetingID{
 			meetinginfo,
 		}
-		err = gocsv.MarshalCSV(meetings, ww)
+		err = gocsv.MarshalCSV(meetings2, ww)
 		if err != nil {
 			panic(err)
 		}
