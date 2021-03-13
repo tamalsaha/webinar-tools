@@ -204,6 +204,23 @@ func (w *SheetWriter) Flush() {
 				Range:          fmt.Sprintf("%s!A%d", w.sheetName, idx + 2),
 				Values:         make([][]interface{}, len(w.data)-1), // skip header
 			}
+			// reorder values as idmap
+			d22 := w.data[1:]
+			for i := range d22 {
+				vals.Values[i] = make([]interface{}, headerLength) // header length
+				for j := range d22[i] {
+					vals.Values[i][idmap[j]] = d22[i][j]
+				}
+			}
+			_, err = w.srv.Spreadsheets.Values.Update(w.spreadsheetId, vals.Range, &vals).
+				IncludeValuesInResponse(false).
+				ValueInputOption("USER_ENTERED").
+				Do()
+			if err != nil {
+				w.e = fmt.Errorf("unable to write data to sheet: %v", err)
+				return
+			}
+			return
 		} else {
 			vals = sheets.ValueRange{
 				MajorDimension: "ROWS",

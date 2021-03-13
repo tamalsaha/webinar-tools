@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"net/http"
 	"sort"
 	"time"
 
@@ -148,13 +147,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		ctx.Redirect("/", http.StatusSeeOther)
+		// ctx.Redirect("/", http.StatusSeeOther)
 
 		// create zoom, google calendar event if not exists,
 		// add attendant if google calendar meeting exists
 
 		date := "2021-3-15"
-		tdate, err := time.Parse("2006-2-1", date)
+		tdate, err := time.Parse("2006-1-2", date)
 		if err != nil {
 			panic(err)
 		}
@@ -219,7 +218,7 @@ func main() {
 				ZoomMeetingPassword:   "zoom_pass",
 			},
 		}
-		err = gocsv.MarshalCSV(clients, ww)
+		err = gocsv.MarshalCSV(meetings, ww)
 		if err != nil {
 			panic(err)
 		}
