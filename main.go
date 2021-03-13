@@ -78,8 +78,8 @@ func main() {
 	fmt.Println("*****", start.UTC().Location().String())
 
 	event := &calendar.Event{
-		Summary: "Google I/O 2015",
-		Location: "800 Howard St., San Francisco, CA 94103",
+		Summary:     "Google I/O 2015",
+		Location:    "800 Howard St., San Francisco, CA 94103",
 		Description: "A chance to hear more about Google's developer products.",
 		Start: &calendar.EventDateTime{
 			DateTime: start.UTC().Format(time.RFC3339),
@@ -91,8 +91,8 @@ func main() {
 		},
 		Recurrence: []string{"RRULE:FREQ=DAILY;COUNT=2"},
 		Attendees: []*calendar.EventAttendee{
-			&calendar.EventAttendee{Email:"lpage@example.com"},
-			&calendar.EventAttendee{Email:"sbrin@example.com"},
+			&calendar.EventAttendee{Email: "lpage@example.com"},
+			&calendar.EventAttendee{Email: "sbrin@example.com"},
 		},
 		ConferenceData: &calendar.ConferenceData{
 			ConferenceId:       "",

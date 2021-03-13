@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/himalayan-institute/zoom-lib-golang"
 	gdrive "gomodules.xyz/gdrive-utils"
+	passgen "gomodules.xyz/password-generator"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 	"io/ioutil"
@@ -12,16 +14,14 @@ import (
 	"os"
 	"strings"
 	"time"
-	passgen "gomodules.xyz/password-generator"
-	"github.com/himalayan-institute/zoom-lib-golang"
 )
 
 // ExampleWebinar contains examples for the /webinar endpoints
 func main__() {
 	var (
-		apiKey          = os.Getenv("ZOOM_API_KEY")
-		apiSecret       = os.Getenv("ZOOM_API_SECRET")
-		email           = os.Getenv("ZOOM_ACCOUNT_EMAIL")
+		apiKey    = os.Getenv("ZOOM_API_KEY")
+		apiSecret = os.Getenv("ZOOM_API_SECRET")
+		email     = os.Getenv("ZOOM_ACCOUNT_EMAIL")
 	)
 
 	zoom.APIKey = apiKey
@@ -56,37 +56,37 @@ func main__() {
 		fmt.Println("_______________________________*************")
 	}
 
-	start := time.Now().Add(60 *time.Minute)
+	start := time.Now().Add(60 * time.Minute)
 
 	meeting, err := zoom.CreateMeeting(zoom.CreateMeetingOptions{
-		HostID:         user.ID,
-		Topic:          "Test Zoom API",
-		Type:           zoom.MeetingTypeScheduled,
-		StartTime:     &zoom.Time{
-			Time:start,
+		HostID: user.ID,
+		Topic:  "Test Zoom API",
+		Type:   zoom.MeetingTypeScheduled,
+		StartTime: &zoom.Time{
+			Time: start,
 		},
-		Duration:       25,
-		Timezone:       start.Location().String(),
-		Password:       passgen.GenerateForCharset(10, passgen.AlphaNum),
-		Agenda:         `Solve World Hunger
+		Duration: 25,
+		Timezone: start.Location().String(),
+		Password: passgen.GenerateForCharset(10, passgen.AlphaNum),
+		Agenda: `Solve World Hunger
 and also
 Corona`,
 		TrackingFields: nil,
-		Settings:       zoom.MeetingSettings{
-			HostVideo:                    false,
-			ParticipantVideo:             false,
-			ChinaMeeting:                 false,
-			IndiaMeeting:                 false,
-			JoinBeforeHost:               true,
-			MuteUponEntry:                true,
-			Watermark:                    false,
-			UsePMI:                       false,
-			ApprovalType:                 zoom.ApprovalTypeManuallyApprove,
-			RegistrationType:             zoom.RegistrationTypeRegisterEachTime,
-			Audio:                        zoom.AudioBoth,
-			AutoRecording:                zoom.AutoRecordingLocal,
-			CloseRegistration:            false,
-			WaitingRoom:                  false,
+		Settings: zoom.MeetingSettings{
+			HostVideo:         false,
+			ParticipantVideo:  false,
+			ChinaMeeting:      false,
+			IndiaMeeting:      false,
+			JoinBeforeHost:    true,
+			MuteUponEntry:     true,
+			Watermark:         false,
+			UsePMI:            false,
+			ApprovalType:      zoom.ApprovalTypeManuallyApprove,
+			RegistrationType:  zoom.RegistrationTypeRegisterEachTime,
+			Audio:             zoom.AudioBoth,
+			AutoRecording:     zoom.AutoRecordingLocal,
+			CloseRegistration: false,
+			WaitingRoom:       false,
 		},
 	})
 	if err != nil {
@@ -101,7 +101,7 @@ Corona`,
 
 func main() {
 	user := zoom.User{
-		Email:                            "tamal@appscode.com",
+		Email: "tamal@appscode.com",
 	}
 
 	content, err := ioutil.ReadFile("create_meeting_response.json")
@@ -134,7 +134,7 @@ func create_calendar_event(user zoom.User, meeting zoom.Meeting) {
 	// https://developers.google.com/calendar/quickstart/go
 	// Change the scope to calendar.CalendarScope and delete any stored credentials.
 
-	start := time.Now().Add(60*time.Minute)
+	start := time.Now().Add(60 * time.Minute)
 	end := start.Add(30 * time.Minute)
 
 	fmt.Println("*****", start.UTC().Format(time.RFC3339))
@@ -148,7 +148,7 @@ func create_calendar_event(user zoom.User, meeting zoom.Meeting) {
 	}
 
 	event := &calendar.Event{
-		Summary:     "Google I/O 2015",
+		Summary: "Google I/O 2015",
 		// Location:    "800 Howard St., San Francisco, CA 94103",
 		Description: "A chance to hear more about Google's developer products.",
 		Start: &calendar.EventDateTime{
@@ -211,7 +211,6 @@ func create_calendar_event(user zoom.User, meeting zoom.Meeting) {
 		log.Fatalf("Unable to create event. %v\n", err)
 	}
 	fmt.Printf("Event created: %s\n", event.HtmlLink)
-
 
 	event2 := &calendar.Event{
 		Id: event.Id,

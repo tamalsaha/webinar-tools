@@ -163,7 +163,7 @@ func (w *SheetWriter) Flush() {
 			// read column
 			// detect index
 
-			index, ok :=  headerMap[w.filter.Header]
+			index, ok := headerMap[w.filter.Header]
 			if !ok {
 				w.e = fmt.Errorf("missing header %s", w.filter.Header)
 				return
@@ -201,7 +201,7 @@ func (w *SheetWriter) Flush() {
 
 			vals = sheets.ValueRange{
 				MajorDimension: "ROWS",
-				Range:          fmt.Sprintf("%s!A%d", w.sheetName, idx + 2),
+				Range:          fmt.Sprintf("%s!A%d", w.sheetName, idx+2),
 				Values:         make([][]interface{}, len(w.data)-1), // skip header
 			}
 			// reorder values as idmap
@@ -212,6 +212,7 @@ func (w *SheetWriter) Flush() {
 					vals.Values[i][idmap[j]] = d22[i][j]
 				}
 			}
+			// update row in place
 			_, err = w.srv.Spreadsheets.Values.Update(w.spreadsheetId, vals.Range, &vals).
 				IncludeValuesInResponse(false).
 				ValueInputOption("USER_ENTERED").
@@ -220,7 +221,7 @@ func (w *SheetWriter) Flush() {
 				w.e = fmt.Errorf("unable to write data to sheet: %v", err)
 				return
 			}
-			return
+			return // Done
 		} else {
 			vals = sheets.ValueRange{
 				MajorDimension: "ROWS",
