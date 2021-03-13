@@ -1,76 +1,35 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/himalayan-institute/zoom-lib-golang"
-	gdrive "gomodules.xyz/gdrive-utils"
-	passgen "gomodules.xyz/password-generator"
-	"google.golang.org/api/calendar/v3"
-	"google.golang.org/api/option"
-	"io/ioutil"
-	"log"
-	"os"
 	"strings"
 	"time"
+
+	"github.com/himalayan-institute/zoom-lib-golang"
+	"github.com/k3a/html2text"
+	passgen "gomodules.xyz/password-generator"
+	"google.golang.org/api/calendar/v3"
 )
 
-// ExampleWebinar contains examples for the /webinar endpoints
-func main__() {
-	var (
-		apiKey    = os.Getenv("ZOOM_API_KEY")
-		apiSecret = os.Getenv("ZOOM_API_SECRET")
-		email     = os.Getenv("ZOOM_ACCOUNT_EMAIL")
-	)
+const calendarId = "c_oravu1d4snmip0784jpfkit8go@group.calendar.google.com" // Test
 
-	zoom.APIKey = apiKey
-	zoom.APISecret = apiSecret
-	zoom.Debug = true
-
-	user, err := zoom.GetUser(zoom.GetUserOpts{EmailOrID: email})
+func createZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, schedule *WebinarSchedule, duration time.Duration, attendees []string) (*WebinarMeetingID, error) {
+	user, err := zc.GetUser(zoom.GetUserOpts{EmailOrID: email})
 	if err != nil {
-		log.Fatalf("got error listing users: %+v\n", err)
+		return nil, fmt.Errorf("failed to get zoom user: %v", err)
 	}
-	data, err := json.MarshalIndent(user, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(data))
-
-	ms, err := zoom.ListMeetings(zoom.ListMeetingsOptions{
-		HostID:     user.ID,
-		Type:       zoom.ListMeetingTypeUpcoming,
-		PageSize:   nil,
-		PageNumber: nil,
-	})
-	if err != nil {
-		panic(err)
-	}
-	for _, m := range ms.Meetings {
-		data, err := json.MarshalIndent(m, "", "  ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(data))
-		fmt.Println("_______________________________*************")
-	}
-
-	start := time.Now().Add(60 * time.Minute)
 
 	meeting, err := zoom.CreateMeeting(zoom.CreateMeetingOptions{
 		HostID: user.ID,
-		Topic:  "Test Zoom API",
+		Topic:  schedule.Title,
 		Type:   zoom.MeetingTypeScheduled,
 		StartTime: &zoom.Time{
-			Time: start,
+			Time: schedule.Schedule.Time,
 		},
-		Duration: 25,
-		Timezone: start.Location().String(),
-		Password: passgen.GenerateForCharset(10, passgen.AlphaNum),
-		Agenda: `Solve World Hunger
-and also
-Corona`,
+		Duration:       25,
+		Timezone:       schedule.Schedule.Location().String(),
+		Password:       passgen.GenerateForCharset(10, passgen.AlphaNum),
+		Agenda:         html2text.HTML2Text(schedule.Summary),
 		TrackingFields: nil,
 		Settings: zoom.MeetingSettings{
 			HostVideo:         false,
@@ -90,55 +49,8 @@ Corona`,
 		},
 	})
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to create meeting: %v", err)
 	}
-	data2, err := json.MarshalIndent(meeting, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(data2))
-}
-
-func main____() {
-	user := zoom.User{
-		Email: "tamal@appscode.com",
-	}
-
-	content, err := ioutil.ReadFile("create_meeting_response.json")
-	if err != nil {
-		panic(err)
-	}
-
-	var meeting zoom.Meeting
-	err = json.Unmarshal(content, &meeting)
-	if err != nil {
-		panic(err)
-	}
-
-	create_calendar_event(user, meeting)
-}
-
-func create_calendar_event(user zoom.User, meeting zoom.Meeting) {
-	client, err := gdrive.DefaultClient(".")
-	if err != nil {
-		log.Fatalf("Unable to create client: %v", err)
-	}
-	srv, err := calendar.NewService(context.TODO(), option.WithHTTPClient(client))
-	if err != nil {
-		log.Fatalf("Unable to retrieve Calendar client: %v", err)
-	}
-
-	calendarId := "c_oravu1d4snmip0784jpfkit8go@group.calendar.google.com" // Test
-
-	// Refer to the Go quickstart on how to setup the environment:
-	// https://developers.google.com/calendar/quickstart/go
-	// Change the scope to calendar.CalendarScope and delete any stored credentials.
-
-	start := time.Now().Add(60 * time.Minute)
-	end := start.Add(30 * time.Minute)
-
-	fmt.Println("*****", start.UTC().Format(time.RFC3339))
-	fmt.Println("*****", start.UTC().Location().String())
 
 	var phones []string
 	for _, num := range meeting.Settings.GobalDialInNumbers {
@@ -147,22 +59,25 @@ func create_calendar_event(user zoom.User, meeting zoom.Meeting) {
 		}
 	}
 
+	atts := make([]*calendar.EventAttendee, len(attendees))
+	for _, email := range attendees {
+		atts = append(atts, &calendar.EventAttendee{
+			Email: email,
+		})
+	}
+
 	event := &calendar.Event{
-		Summary: "Google I/O 2015",
-		// Location:    "800 Howard St., San Francisco, CA 94103",
-		Description: "A chance to hear more about Google's developer products.",
+		Summary:     "AppsCode Webinar: " + schedule.Title,
+		Description: html2text.HTML2Text(schedule.Summary),
 		Start: &calendar.EventDateTime{
-			DateTime: start.UTC().Format(time.RFC3339),
-			TimeZone: start.UTC().Location().String(),
+			DateTime: schedule.Schedule.UTC().Format(time.RFC3339),
+			TimeZone: schedule.Schedule.Location().String(),
 		},
 		End: &calendar.EventDateTime{
-			DateTime: end.UTC().Format(time.RFC3339),
-			TimeZone: end.UTC().Location().String(),
+			DateTime: schedule.Schedule.Add(duration).Format(time.RFC3339),
+			TimeZone: schedule.Schedule.Location().String(),
 		},
-		// Recurrence: []string{"RRULE:FREQ=DAILY;COUNT=2"},
-		Attendees: []*calendar.EventAttendee{
-			{Email: "lpage@example.com"},
-		},
+		Attendees: atts,
 		ConferenceData: &calendar.ConferenceData{
 			ConferenceId: fmt.Sprintf("%d", meeting.ID),
 			ConferenceSolution: &calendar.ConferenceSolution{
@@ -208,21 +123,27 @@ func create_calendar_event(user zoom.User, meeting zoom.Meeting) {
 
 	event, err = srv.Events.Insert(calendarId, event).ConferenceDataVersion(1).Do()
 	if err != nil {
-		log.Fatalf("Unable to create event. %v\n", err)
-	}
-	fmt.Printf("Event created: %s\n", event.HtmlLink)
-
-	event2 := &calendar.Event{
-		Id: event.Id,
-		Attendees: []*calendar.EventAttendee{
-			{Email: "lpage@example.com"},
-			{Email: "sbrin+89@example.com"},
-		},
+		return nil, fmt.Errorf("Unable to create event. %v\n", err)
 	}
 
-	e2, err := srv.Events.Patch(calendarId, event2.Id, event2).ConferenceDataVersion(1).Do() // .SendUpdates()
-	if err != nil {
-		log.Fatalf("Unable to create event. %v\n", err)
+	return &WebinarMeetingID{
+		GoogleCalendarEventID: event.Id,
+		ZoomMeetingID:         meeting.ID,
+		ZoomMeetingPassword:   meeting.Password,
+	}, nil
+}
+
+func AddAttendants(srv *calendar.Service, eventId string, emails []string) error {
+	attendees := make([]*calendar.EventAttendee, len(emails))
+	for i, email := range emails {
+		attendees[i] = &calendar.EventAttendee{
+			Email: email,
+		}
 	}
-	fmt.Printf("Event created: %s\n", e2.HtmlLink)
+	event := &calendar.Event{
+		Id:        eventId,
+		Attendees: attendees,
+	}
+	_, err := srv.Events.Patch(calendarId, event.Id, event).ConferenceDataVersion(1).Do() // .SendUpdates()
+	return err
 }

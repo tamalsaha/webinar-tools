@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/himalayan-institute/zoom-lib-golang"
+	"google.golang.org/api/calendar/v3"
 	"io"
 	"log"
+	"os"
 	"sort"
 	"time"
 
@@ -30,7 +33,7 @@ type WebinarSchedule struct {
 
 type WebinarMeetingID struct {
 	GoogleCalendarEventID string `json:"google_calendar_event_id" csv:"Google Calendar Event ID"`
-	ZoomMeetingID         string `json:"zoom_meeting_id" csv:"Zoom Meeting ID"`
+	ZoomMeetingID         int    `json:"zoom_meeting_id" csv:"Zoom Meeting ID"`
 	ZoomMeetingPassword   string `json:"zoom_meeting_password" csv:"Zoom Meeting Password"`
 }
 
@@ -68,12 +71,25 @@ func (date *DateTime) UnmarshalCSV(csv string) (err error) {
 }
 
 func main() {
+	var (
+		apiKey           = os.Getenv("ZOOM_API_KEY")
+		apiSecret        = os.Getenv("ZOOM_API_SECRET")
+		zoomAccountEmail = os.Getenv("ZOOM_ACCOUNT_EMAIL")
+	)
+	zoom.Debug = true
+	zc := zoom.NewClient(apiKey, apiSecret)
+
 	hc, err := gdrive.DefaultClient("/home/tamal/go/src/github.com/tamalsaha/webinar-tools")
 	if err != nil {
 		panic(err)
 	}
 
-	srv, err := sheets.NewService(context.TODO(), option.WithHTTPClient(hc))
+	srvCalendar, err := calendar.NewService(context.TODO(), option.WithHTTPClient(hc))
+	if err != nil {
+		log.Fatalf("Unable to retrieve Calendar gc: %v", err)
+	}
+
+	srvSheets, err := sheets.NewService(context.TODO(), option.WithHTTPClient(hc))
 	if err != nil {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
@@ -86,7 +102,7 @@ func main() {
 
 	m.Get("/", func() string {
 		header := structs.New(WebinarSchedule{}).Field("Schedule").Tag("csv")
-		reader, err := lib.NewRowReader(srv, spreadsheetId, "Schedule", &lib.Filter{
+		reader, err := lib.NewRowReader(srvSheets, spreadsheetId, "Schedule", &lib.Filter{
 			Header: header,
 			By: func(column []interface{}) (int, error) {
 				type TP struct {
@@ -139,10 +155,12 @@ func main() {
 	})
 
 	m.Post("/register", binding.Bind(WebinarRegistrationForm{}), func(ctx *macaron.Context, form WebinarRegistrationForm) string {
+		sheetName := "webinar_2020_03_11"
+
 		clients := []*WebinarRegistrationForm{
 			&form,
 		}
-		writer := lib.NewWriter(srv, spreadsheetId, "webinar_2020_03_11")
+		writer := lib.NewWriter(srvSheets, spreadsheetId, sheetName)
 		err = gocsv.MarshalCSV(clients, writer)
 		if err != nil {
 			panic(err)
@@ -159,7 +177,7 @@ func main() {
 		}
 		yw, mw, dw := tdate.Date()
 
-		reader, err := lib.NewRowReader(srv, spreadsheetId, "Schedule", &lib.Filter{
+		reader, err := lib.NewRowReader(srvSheets, spreadsheetId, "Schedule", &lib.Filter{
 			Header: "Schedule",
 			By: func(values []interface{}) (int, error) {
 				for i, v := range values {
@@ -189,11 +207,28 @@ func main() {
 		if len(meetings) > 0 {
 			result = meetings[0]
 		}
-		if result.GoogleCalendarEventID != "" {
+		if result != nil && result.GoogleCalendarEventID != "" {
+			wats, err := lib.NewColumnReader(srvSheets, spreadsheetId,sheetName, "Work Email")
+			if err != nil {
+				panic(err)
+			}
+			atts := []*WebinarRegistrationEmail{}
+			if err := gocsv.UnmarshalCSV(wats, &atts); err != nil { // Load clients from file
+				panic(err)
+			}
+
+			emails := make([]string, len(atts))
+			for i, a := range atts {
+				emails[i] = a.WorkEmail
+			}
+			err = AddAttendants(srvCalendar, result.GoogleCalendarEventID, emails)
+			if err != nil {
+				panic(err)
+			}
 			return "meeting id" + result.GoogleCalendarEventID
 		}
 
-		ww := lib.NewRowWriter(srv, spreadsheetId, "Schedule", &lib.Filter{
+		ww := lib.NewRowWriter(srvSheets, spreadsheetId, "Schedule", &lib.Filter{
 			Header: "Schedule",
 			By: func(values []interface{}) (int, error) {
 				for i, v := range values {
@@ -211,12 +246,16 @@ func main() {
 			},
 		})
 
+		var schedule *WebinarSchedule
+		meetinginfo, err := createZoomMeeting(srvCalendar, zc, zoomAccountEmail, schedule, 60*time.Minute, []string{
+			form.WorkEmail,
+		})
+		if err != nil {
+			panic(err)
+		}
+
 		meetings = []*WebinarMeetingID{
-			{
-				GoogleCalendarEventID: "gc_id",
-				ZoomMeetingID:         "zoom_id",
-				ZoomMeetingPassword:   "zoom_pass",
-			},
+			meetinginfo,
 		}
 		err = gocsv.MarshalCSV(meetings, ww)
 		if err != nil {
@@ -228,7 +267,7 @@ func main() {
 
 	m.Get("/emails", func() string {
 		header := structs.New(WebinarRegistrationEmail{}).Field("WorkEmail").Tag("csv")
-		reader, err := lib.NewColumnReader(srv, spreadsheetId, "webinar_2020_03_11", header)
+		reader, err := lib.NewColumnReader(srvSheets, spreadsheetId, "webinar_2020_03_11", header)
 		if err == io.EOF {
 			return "not found"
 		} else if err != nil {

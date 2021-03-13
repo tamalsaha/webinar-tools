@@ -7,6 +7,7 @@ require (
 	github.com/go-macaron/binding v1.1.1
 	github.com/gocarina/gocsv v0.0.0-00010101000000-000000000000
 	github.com/himalayan-institute/zoom-lib-golang v1.0.0
+	github.com/k3a/html2text v1.0.7
 	golang.org/x/net v0.0.0-20210222171744-9060382bd457
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
 	gomodules.xyz/gdrive-utils v0.0.0-20210223120558-ff697d120ee1
