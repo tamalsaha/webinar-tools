@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gomodules.xyz/sets"
 	"strings"
 	"time"
 
@@ -134,8 +135,10 @@ func CreateZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, sch
 }
 
 func AddEventAttendants(srv *calendar.Service, eventId string, emails []string) error {
+	sortEmails := sets.NewString(emails...).List()
+
 	attendees := make([]*calendar.EventAttendee, len(emails))
-	for i, email := range emails {
+	for i, email := range sortEmails {
 		attendees[i] = &calendar.EventAttendee{
 			Email: email,
 		}
