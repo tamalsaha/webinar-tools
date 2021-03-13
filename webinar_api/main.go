@@ -221,7 +221,7 @@ func main() {
 			for i, a := range atts {
 				emails[i] = a.WorkEmail
 			}
-			err = AddAttendants(srvCalendar, result.GoogleCalendarEventID, emails)
+			err = AddEventAttendants(srvCalendar, result.GoogleCalendarEventID, emails)
 			if err != nil {
 				panic(err)
 			}
@@ -247,7 +247,7 @@ func main() {
 		})
 
 		var schedule *WebinarSchedule
-		meetinginfo, err := createZoomMeeting(srvCalendar, zc, zoomAccountEmail, schedule, 60*time.Minute, []string{
+		meetinginfo, err := CreateZoomMeeting(srvCalendar, zc, zoomAccountEmail, schedule, 60*time.Minute, []string{
 			form.WorkEmail,
 		})
 		if err != nil {

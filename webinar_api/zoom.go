@@ -13,7 +13,7 @@ import (
 
 const calendarId = "c_oravu1d4snmip0784jpfkit8go@group.calendar.google.com" // Test
 
-func createZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, schedule *WebinarSchedule, duration time.Duration, attendees []string) (*WebinarMeetingID, error) {
+func CreateZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, schedule *WebinarSchedule, duration time.Duration, attendees []string) (*WebinarMeetingID, error) {
 	user, err := zc.GetUser(zoom.GetUserOpts{EmailOrID: email})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get zoom user: %v", err)
@@ -133,7 +133,7 @@ func createZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, sch
 	}, nil
 }
 
-func AddAttendants(srv *calendar.Service, eventId string, emails []string) error {
+func AddEventAttendants(srv *calendar.Service, eventId string, emails []string) error {
 	attendees := make([]*calendar.EventAttendee, len(emails))
 	for i, email := range emails {
 		attendees[i] = &calendar.EventAttendee{
