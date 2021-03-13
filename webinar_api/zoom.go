@@ -19,7 +19,7 @@ func CreateZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, sch
 		return nil, fmt.Errorf("failed to get zoom user: %v", err)
 	}
 
-	meeting, err := zoom.CreateMeeting(zoom.CreateMeetingOptions{
+	meeting, err := zc.CreateMeeting(zoom.CreateMeetingOptions{
 		HostID: user.ID,
 		Topic:  schedule.Title,
 		Type:   zoom.MeetingTypeScheduled,
