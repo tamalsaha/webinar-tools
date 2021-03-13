@@ -208,7 +208,7 @@ func main() {
 			result = meetings[0]
 		}
 		if result != nil && result.GoogleCalendarEventID != "" {
-			wats, err := lib.NewColumnReader(srvSheets, spreadsheetId,sheetName, "Work Email")
+			wats, err := lib.NewColumnReader(srvSheets, spreadsheetId, sheetName, "Work Email")
 			if err != nil {
 				panic(err)
 			}
