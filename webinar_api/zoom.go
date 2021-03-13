@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"gomodules.xyz/sets"
 	"strings"
 	"time"
 
 	"github.com/himalayan-institute/zoom-lib-golang"
 	"github.com/k3a/html2text"
 	passgen "gomodules.xyz/password-generator"
+	"gomodules.xyz/pointer"
+	"gomodules.xyz/sets"
 	"google.golang.org/api/calendar/v3"
 )
 
@@ -78,7 +79,10 @@ func CreateZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, sch
 			DateTime: schedule.Schedule.Add(duration).Format(time.RFC3339),
 			TimeZone: schedule.Schedule.Location().String(),
 		},
-		Attendees: atts,
+		GuestsCanInviteOthers:   pointer.TrueP(),
+		GuestsCanModify:         false,
+		GuestsCanSeeOtherGuests: pointer.FalseP(),
+		Attendees:               atts,
 		ConferenceData: &calendar.ConferenceData{
 			ConferenceId: fmt.Sprintf("%d", meeting.ID),
 			ConferenceSolution: &calendar.ConferenceSolution{
@@ -135,10 +139,18 @@ func CreateZoomMeeting(srv *calendar.Service, zc *zoom.Client, email string, sch
 }
 
 func AddEventAttendants(srv *calendar.Service, eventId string, emails []string) error {
-	sortEmails := sets.NewString(emails...).List()
+	sortEmails := sets.NewString(emails...)
+
+	e2, err := srv.Events.Get(calendarId, eventId).Do()
+	if err != nil {
+		return err
+	}
+	for _, a := range e2.Attendees {
+		sortEmails.Insert(a.Email)
+	}
 
 	attendees := make([]*calendar.EventAttendee, len(emails))
-	for i, email := range sortEmails {
+	for i, email := range sortEmails.List() {
 		attendees[i] = &calendar.EventAttendee{
 			Email: email,
 		}
@@ -147,6 +159,6 @@ func AddEventAttendants(srv *calendar.Service, eventId string, emails []string) 
 		Id:        eventId,
 		Attendees: attendees,
 	}
-	_, err := srv.Events.Patch(calendarId, event.Id, event).ConferenceDataVersion(1).Do() // .SendUpdates()
+	_, err = srv.Events.Patch(calendarId, event.Id, event).ConferenceDataVersion(1).Do() // .SendUpdates()
 	return err
 }
