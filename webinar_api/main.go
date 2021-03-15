@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/himalayan-institute/zoom-lib-golang"
@@ -44,12 +45,16 @@ type WebinarInfo struct {
 }
 
 type WebinarRegistrationForm struct {
-	FirstName       string `json:"first_name" csv:"First Name" form:"first_name"`
-	LastName        string `json:"last_name" csv:"Last Name" form:"last_name"`
-	Phone           string `json:"phone" csv:"Phone" form:"phone"`
-	JobTitle        string `json:"job_title" csv:"Job Title" form:"job_title"`
-	WorkEmail       string `json:"work_email" csv:"Work Email" form:"work_email"`
-	KnowsKubernetes bool   `json:"knows_kubernetes" csv:"Knows Kubernetes" form:"knows_kubernetes"`
+	FirstName string `json:"first_name" csv:"First Name" form:"first_name"`
+	LastName  string `json:"last_name" csv:"Last Name" form:"last_name"`
+	Phone     string `json:"phone" csv:"Phone" form:"phone"`
+	JobTitle  string `json:"job_title" csv:"Job Title" form:"job_title"`
+	Company   string `json:"company" csv:"Company" form:"company"`
+	WorkEmail string `json:"work_email" csv:"Work Email" form:"work_email"`
+
+	ClusterProvider StringSlice `json:"cluster_provider,omitempty" csv:"Cluster Provider" form:"cluster_provider"`
+	ExperienceLevel string      `json:"experience_level,omitempty" csv:"Experience Level" form:"experience_level"`
+	MarketingReach  string      `json:"marketing_reach,omitempty" csv:"Marketing Reach" form:"marketing_reach"`
 }
 
 type WebinarRegistrationEmail struct {
@@ -74,6 +79,30 @@ func (date *DateTime) String() string {
 func (date *DateTime) UnmarshalCSV(csv string) (err error) {
 	date.Time, err = time.Parse("1/2/2006 15:04:05", csv)
 	return err
+}
+
+type StringSlice []string
+
+// Convert the internal date as CSV string
+func (slice *StringSlice) MarshalCSV() (string, error) {
+	if slice == nil {
+		return "", nil
+	}
+	return strings.Join(*slice, ","), nil
+}
+
+// You could also use the standard Stringer interface
+func (slice *StringSlice) String() string {
+	if slice == nil {
+		return ""
+	}
+	return strings.Join(*slice, ",")
+}
+
+// Convert the CSV string as internal date
+func (slice *StringSlice) UnmarshalCSV(csv string) error {
+	*slice = strings.Split(csv, ",")
+	return nil
 }
 
 func main() {
@@ -176,7 +205,7 @@ func main() {
 		// create zoom, google calendar event if not exists,
 		// add attendant if google calendar meeting exists
 
-		date := "2021-3-15"
+		date := "2021-3-18"
 		tdate, err := time.Parse("2006-1-2", date)
 		if err != nil {
 			panic(err)
